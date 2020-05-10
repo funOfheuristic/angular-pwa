@@ -1,6 +1,6 @@
 import { Component, OnInit, ApplicationRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { SwUpdate } from '@angular/service-worker';
+import { SwUpdate, SwPush } from '@angular/service-worker';
 import { interval } from 'rxjs';
 
 @Component({
@@ -11,16 +11,27 @@ import { interval } from 'rxjs';
 export class AppComponent implements OnInit {
   title = 'Angular-pwa';
   apiData: any;
+  private readonly publicKey =
+    'BJkUsZs9QYXvusPKt-2SJ_LZD8Y6L3HHEJjP9rVNaiBgjOCr5aLyGMGGJelLMi4eh-2M7SyRbQPZvEok1iYtTuA';
   constructor(
     private http: HttpClient,
     private update: SwUpdate,
-    private appRef: ApplicationRef
+    private appRef: ApplicationRef,
+    private swPush: SwPush
   ) {
     this.updateClient();
     this.checkUpdate();
   }
 
   ngOnInit() {
+    this.pushSubscription();
+
+    this.swPush.messages.subscribe((message) => console.log(message));
+
+    this.swPush.notificationClicks.subscribe(({ action, notification }) => {
+      window.open(notification.data.url);
+    });
+
     this.http.get('http://dummy.restapiexample.com/api/v1/employees').subscribe(
       (res: any) => {
         this.apiData = res.data;
@@ -59,5 +70,22 @@ export class AppComponent implements OnInit {
         });
       }
     });
+  }
+
+  pushSubscription() {
+    if (!this.swPush.isEnabled) {
+      console.log('Notification is not enabled');
+      return;
+    }
+
+    this.swPush
+      .requestSubscription({
+        serverPublicKey: this.publicKey,
+      })
+      .then((sub) => {
+        // Make a post call to serve
+        console.log(JSON.stringify(sub));
+      })
+      .catch((err) => console.log(err));
   }
 }
