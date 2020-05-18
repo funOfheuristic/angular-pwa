@@ -88,4 +88,25 @@ export class AppComponent implements OnInit {
       })
       .catch((err) => console.log(err));
   }
+
+  postSync() {
+    let obj = {
+      name: 'Subrat',
+    };
+    //api call
+    this.http.post('http://localhost:3000/data', obj).subscribe(
+      (res) => {
+        console.log(res);
+      },
+      (err) => {
+        this.backgroundSync();
+      }
+    );
+  }
+
+  backgroundSync() {
+    navigator.serviceWorker.ready
+      .then((swRegistration) => swRegistration.sync.register('post-data'))
+      .catch(console.log);
+  }
 }
