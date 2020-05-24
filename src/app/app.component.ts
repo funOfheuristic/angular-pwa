@@ -2,6 +2,7 @@ import { Component, OnInit, ApplicationRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { SwUpdate, SwPush } from '@angular/service-worker';
 import { interval } from 'rxjs';
+import { IndexedDBService } from './services/indexed-db.service';
 
 @Component({
   selector: 'app-root',
@@ -17,7 +18,8 @@ export class AppComponent implements OnInit {
     private http: HttpClient,
     private update: SwUpdate,
     private appRef: ApplicationRef,
-    private swPush: SwPush
+    private swPush: SwPush,
+    private indexedDBService: IndexedDBService
   ) {
     this.updateClient();
     this.checkUpdate();
@@ -99,7 +101,11 @@ export class AppComponent implements OnInit {
         console.log(res);
       },
       (err) => {
-        this.backgroundSync();
+        this.indexedDBService
+          .addUser(obj.name)
+          .then(this.backgroundSync)
+          .catch(console.log);
+        //this.backgroundSync();
       }
     );
   }
